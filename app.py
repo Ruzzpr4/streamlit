@@ -6,7 +6,7 @@ import os
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title="Consulta CNPJ",
+    page_title="Consulta CNPJ com base no CNAE",
     layout="wide"
 )
 
@@ -65,8 +65,26 @@ ufs = st.sidebar.multiselect(
 
 limitador_linhas = st.sidebar.slider("Limite de visualização (Tela)", 100, 50000, 1000)
 
+# --- NOVO: BOTÃO PARA CONTAGEM TOTAL ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("### Estatísticas do Banco")
+if st.sidebar.button("Verificar Total de Registros"):
+    try:
+        if os.path.exists("dados_app"):
+            con_count = duckdb.connect(database=':memory:')
+            # O DuckDB conta linhas de parquet instantaneamente lendo apenas metadados
+            total_banco = con_count.execute(f"SELECT count(*) FROM '{CAMINHO_DADOS}'").fetchone()[0]
+            
+            # Formatação brasileira (ponto como separador de milhar)
+            total_fmt = f"{total_banco:,.0f}".replace(",", ".")
+            st.sidebar.info(f"Total no Banco: **{total_fmt}** empresas")
+        else:
+            st.sidebar.error("Banco de dados não encontrado.")
+    except Exception as e:
+        st.sidebar.error(f"Erro ao ler banco: {e}")
+
 # --- ÁREA PRINCIPAL ---
-st.title("Base de Dados EMPRESAS - Consulta por CNAE")
+st.title("Base de Dados EMPRESAS - Consulta por CNAE.  V1.0 testes")
 
 # Verificação silenciosa do diretório
 if not os.path.exists("dados_app"):
