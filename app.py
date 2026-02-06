@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-CAMINHO_DADOS = "dados_app/*.parquet"
+CAMINHO_DADOS = "dados_app_todas_empresas/*.parquet"
 
 try:
     EMAIL_REMETENTE = st.secrets["email"]["usuario"]
@@ -66,7 +66,7 @@ TEMPLATES = {
                                     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 30px; margin-bottom: 30px;">
                                         <tr>
                                             <td align="center">
-                                                <a href="#" style="background-color: #00b3e6; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 15px 30px; border-radius: 5px; display: inline-block;">
+                                                <a href="https://www.fiscodata.com.br/" style="background-color: #00b3e6; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 15px 30px; border-radius: 5px; display: inline-block;">
                                                     AGENDAR CONSULTA GRATUITA
                                                 </a>
                                             </td>
@@ -185,7 +185,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### Estatísticas")
 if st.sidebar.button("Verificar Total de Registros"):
     try:
-        if os.path.exists("dados_app"):
+        if os.path.exists("dados_app_todas_empresas"):
             con_count = duckdb.connect(database=':memory:')
             total_banco = con_count.execute(f"SELECT count(*) FROM '{CAMINHO_DADOS}'").fetchone()[0]
             total_fmt = f"{total_banco:,.0f}".replace(",", ".")
@@ -201,7 +201,7 @@ st.text("Desenvolvido por Raul Stefani - Última atualização: 06/02")
 tab1, tab2 = st.tabs(["Busca e Filtros", "Envio de E-mails"])
 
 with tab1:
-    if not os.path.exists("dados_app"):
+    if not os.path.exists("dados_app_todas_empresas"):
         st.error("Diretório de dados não encontrado.")
         st.stop()
 
