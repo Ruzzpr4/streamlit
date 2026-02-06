@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components 
 import duckdb
 import pandas as pd
 import time
@@ -12,38 +13,103 @@ st.set_page_config(
     layout="wide"
 )
 
-CAMINHO_DADOS = "dados_app_todas_empresas/*.parquet"
+CAMINHO_DADOS = "dados_app/*.parquet"
 
 try:
     EMAIL_REMETENTE = st.secrets["email"]["usuario"]
     EMAIL_SENHA = st.secrets["email"]["senha"]
 except FileNotFoundError:
-    st.error("Erro: Arquivo não encontrado.")
+    st.error("Erro: Arquivo de segredos não encontrado.")
     st.stop()
 except KeyError:
     st.error("Erro: As chaves de e-mail não foram configuradas.")
     st.stop()
 
+
 TEMPLATES = {
-    "Apresentação Comercial": {
+    "1. FiscoData (Premium)": {
+        "assunto": "Inteligência Tributária para a {EMPRESA}",
+        "corpo": """
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <style>
+                body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+                table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+                img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+                table { border-collapse: collapse !important; }
+                body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; font-family: 'Helvetica', 'Arial', sans-serif; background-color: #f4f6f8; }
+            </style>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f4f6f8;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td align="center" style="padding: 40px 10px;">
+                        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+                            <tr>
+                                <td align="center" style="background-color: #004080; padding: 30px 40px;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; letter-spacing: 1px;">FISCODATA</h1>
+                                    <p style="color: #00b3e6; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Tecnologia em Dados</p>
+                                </td>
+                            </tr>
+                            <tr><td height="4" style="background-color: #00b3e6;"></td></tr>
+                            <tr>
+                                <td style="padding: 40px 40px 30px 40px; color: #333333; text-align: left;">
+                                    <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #004080;">O mundo fiscal na ponta dos seus dedos</h2>
+                                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">Olá, equipe <strong>{EMPRESA}</strong>,</p>
+                                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                                        Identificamos que empresas em <strong>{CIDADE}</strong> têm enfrentado desafios crescentes com a complexidade fiscal. Na <strong>FiscoData</strong>, nossa missão é simplificar esse cenário.
+                                    </p>
+                                    <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                                        Dedicando-se a oferecer o melhor suporte às empresas, colocando a disposição de seus clientes profissionais experientes, preparados para serem verdadeiros consultores
+                                    </p>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 30px; margin-bottom: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="#" style="background-color: #00b3e6; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 15px 30px; border-radius: 5px; display: inline-block;">
+                                                    AGENDAR CONSULTA GRATUITA
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="background-color: #333333; padding: 30px 40px; color: #bbbbbb; font-size: 12px;">
+                                    <p style="margin: 0 0 10px 0;"><strong>FiscoData Tecnologia</strong><br>Soluções Fiscais</p>
+                                    <p style="margin: 0;">&copy; 2025 FiscoData. Todos os direitos reservados.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+    },
+    "2. Apresentação Comercial": {
         "assunto": "Parceria com a {EMPRESA}",
         "corpo": """
-        <div style="font-family: Arial, color: #333;">
+        <div style="background-color: #ffffff; padding: 20px; font-family: Arial, sans-serif; color: #333333;">
             <p>Olá, equipe <strong>{EMPRESA}</strong>,</p>
             <p>Vi que vocês atuam em {CIDADE} e gostaria de apresentar uma solução que pode ajudar na sua operação.</p>
             <p>Podemos agendar uma breve conversa?</p>
+            <br>
             <p>Atenciosamente,</p>
             <p><strong>Seu Nome</strong></p>
         </div>
         """
     },
-    "Contato Simples": {
+    "3. Contato Simples": {
         "assunto": "Contato referente à {EMPRESA}",
         "corpo": """
-        <p>Olá,</p>
-        <p>Gostaria de falar com o responsável pela <strong>{EMPRESA}</strong>.</p>
-        <p>Tenho uma proposta comercial.</p>
-        <p>Obrigado.</p>
+        <div style="background-color: #ffffff; padding: 20px; font-family: Arial, sans-serif; color: #333333;">
+            <p>Olá,</p>
+            <p>Gostaria de falar com o responsável pela <strong>{EMPRESA}</strong>.</p>
+            <p>Tenho uma proposta comercial.</p>
+            <p>Obrigado.</p>
+        </div>
         """
     }
 }
@@ -119,7 +185,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### Estatísticas")
 if st.sidebar.button("Verificar Total de Registros"):
     try:
-        if os.path.exists("dados_app_todas_empresas"):
+        if os.path.exists("dados_app"):
             con_count = duckdb.connect(database=':memory:')
             total_banco = con_count.execute(f"SELECT count(*) FROM '{CAMINHO_DADOS}'").fetchone()[0]
             total_fmt = f"{total_banco:,.0f}".replace(",", ".")
@@ -129,13 +195,13 @@ if st.sidebar.button("Verificar Total de Registros"):
     except Exception as e:
         st.sidebar.error(f"Erro ao ler banco: {e}")
 
-st.title("Base de Dados EMPRESAS - Consulta por CNAE v1.1")
-st.text("Desenvolvido por Raul Stefani - Última atualização: 05/02")
+st.title("Base de Dados EMPRESAS - Consulta por CNAE v1.2")
+st.text("Desenvolvido por Raul Stefani - Última atualização: 06/02")
 
 tab1, tab2 = st.tabs(["Busca e Filtros", "Envio de E-mails"])
 
 with tab1:
-    if not os.path.exists("dados_app_todas_empresas"):
+    if not os.path.exists("dados_app"):
         st.error("Diretório de dados não encontrado.")
         st.stop()
 
@@ -287,7 +353,6 @@ with tab2:
                         df_emails_raw.insert(0, "Selecionar", False)
 
                     df_editado = st.data_editor(
-                        
                         df_emails_raw[["Selecionar", "RAZAO SOCIAL" , "CAPITAL SOCIAL" , "EMAIL", "MUNICIPIO", "UF"]],
                         column_config={
                             "Selecionar": st.column_config.CheckboxColumn(
@@ -325,7 +390,11 @@ with tab2:
                     st.markdown(f"**Para:** {lead_exemplo['EMAIL']}")
                     st.markdown(f"**Assunto:** {preview_assunto}")
                     st.markdown("---")
-                    st.markdown(preview_corpo, unsafe_allow_html=True)
+                    
+                    # --- RENDERIZAÇÃO CORRETA PARA VISUALIZAÇÃO ISOLADA ---
+                    components.html(preview_corpo, height=600, scrolling=True)
+                    # ------------------------------------------------------
+                    
                     st.markdown("---")
                     
                     if st.button(f"Confirmar Envio ({len(df_para_envio)} e-mails)", type="primary"):
