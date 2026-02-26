@@ -375,6 +375,12 @@ with tab2:
                     st.caption(f"{len(df_para_envio)} empresas selecionadas manualmente.")
 
                 intervalo = st.number_input("Intervalo entre envios (segundos)", min_value=1, value=2)
+                st.divider()
+                st.subheader("Modo Teste")
+                modo_teste = st.checkbox("Enviar para e-mail de teste (ignorar destinatários reais)")
+                email_teste = ""
+                if modo_teste:
+                    email_teste = st.text_input("E-mail de teste", placeholder="seuemail@exemplo.com")
 
             with col_dir:
                 st.subheader("Pré-visualização")
@@ -406,7 +412,7 @@ with tab2:
                         
                         for i in range(total_envio):
                             lead = df_para_envio.iloc[i]
-                            email_dest = lead['EMAIL']
+                            email_dest = email_teste if modo_teste and email_teste else lead['EMAIL']
                             empresa_nome = lead['NOME FANTASIA'] if lead['NOME FANTASIA'] else lead['RAZAO SOCIAL']
                             
                             assunto_final = assunto_input.replace("{EMPRESA}", str(empresa_nome))
