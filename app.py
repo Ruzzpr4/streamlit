@@ -196,7 +196,7 @@ if st.sidebar.button("Verificar Total de Registros"):
         st.sidebar.error(f"Erro ao ler banco: {e}")
 
 st.title("Base de Dados EMPRESAS - Consulta por CNAE v1.2")
-st.text("Desenvolvido por Raul Stefani - Última atualização: 06/02")
+st.text("Última atualização: 06/02 da base publica da receita federal")
 
 tab1, tab2 = st.tabs(["Busca e Filtros", "Envio de E-mails"])
 
